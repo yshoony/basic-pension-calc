@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 기초연금 소득인정액 & 수급판정 계산기</title>
+<style>
+  :root {
+    --primary: #0284c7;
+    --primary-dark: #0369a1;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --success: #16a34a;
+    --danger: #dc2626;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .calc-container {
+    background: var(--card);
+    width: 100%;
+    max-width: 620px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0c4a6e;
+    margin-bottom: 6px;
+  }
+
+  .sub-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 18px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #f1f5f9;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #475569;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="number"], select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #ffffff;
+  }
+
+  input[type="number"]:focus, select:focus {
+    border-color: var(--primary);
+  }
+
+  .unit {
+    position: absolute;
+    right: 14px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .btn-calc {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 20px;
+  }
+
+  .btn-calc:hover {
+    background: var(--primary-dark);
+  }
+
+  /* 결과창 */
+  .result-box {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--border);
+    display: none;
+  }
+
+  .judge-card {
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .judge-pass {
+    background: #f0fdf4;
+    border: 2px solid #bbf7d0;
+    color: var(--success);
+  }
+
+  .judge-fail {
+    background: #fef2f2;
+    border: 2px solid #fecaca;
+    color: var(--danger);
+  }
+
+  .judge-status {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .judge-sub {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .info-note {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="calc-container">
+  <h1>👵 2026 기초연금 수급 모의계산기</h1>
+  <p class="sub-desc">2026년 최신 고시 기준(선정기준액 및 공제액)을 반영해 소득인정액을 산정하고 수급 가능성을 진단합니다.</p>
+
+  <div class="section-title">1. 기본 가구 정보</div>
+  <div class="form-group">
+    <label for="householdType">가구 유형</label>
+    <select id="householdType">
+      <option value="single" selected>단독가구 (선정기준액 247만 원)</option>
+      <option value="couple">부부가구 (선정기준액 395.2만 원)</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="regionType">거주 지역</label>
+    <select id="regionType">
+      <option value="135000000" selected>대도시·특례시 (기본재산 공제 1억 3,500만 원)</option>
+      <option value="85000000">중소도시 (기본재산 공제 8,500만 원)</option>
+      <option value="72500000">농어촌 (기본재산 공제 7,250만 원)</option>
+    </select>
+  </div>
+
+  <div class="section-title">2. 월 소득 정보 (본인 + 배우자 합산)</div>
+  <div class="form-group">
+    <label for="earnedIncome">월 근로소득 합계</label>
+    <div class="input-wrapper">
+      <input type="number" id="earnedIncome" value="0" step="10000" min="0">
+      <span class="unit">원</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="otherIncome">월 기타소득 (국민연금, 사업·임대소득 합계)</label>
+    <div class="input-wrapper">
+      <input type="number" id="otherIncome" value="0" step="10000" min="0">
+      <span class="unit">원</span>
+    </div>
+  </div>
+
+  <div class="section-title">3. 보유 재산 정보 (공시가격 기준)</div>
+  <div class="form-group">
+    <label for="propertyValue">부동산(주택·토지) 공시가격 합계</label>
+    <div class="input-wrapper">
+      <input type="number" id="propertyValue" value="200000000" step="1000000" min="0">
+      <span class="unit">원</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="financialValue">금융재산 (예·적금, 주식 등 합계)</label>
+    <div class="input-wrapper">
+      <input type="number" id="financialValue" value="30000000" step="1000000" min="0">
+      <span class="unit">원</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="debtValue">인정 부채 (금융기관 대출금 등)</label>
+    <div class="input-wrapper">
+      <input type="number" id="debtValue" value="0" step="1000000" min="0">
+      <span class="unit">원</span>
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calculateBasicPension()">수급 가능 여부 판정하기</button>
+
+  <!-- 판정 결과 박스 -->
+  <div class="result-box" id="resultBox">
+    <div class="judge-card" id="judgeCard">
+      <div class="judge-status" id="judgeStatus">수급 가능 유력</div>
+      <div class="judge-sub" id="judgeSub">소득인정액이 선정기준액 이하입니다.</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">월 소득평가액</div>
+        <div class="stat-value" id="resIncomeEval">0원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">재산의 월 소득환산액</div>
+        <div class="stat-value" id="resPropEval">0원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">최종 소득인정액</div>
+        <div class="stat-value" id="resTotalRecognized" style="color: #0284c7;">0원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">2026 선정기준액</div>
+        <div class="stat-value" id="resThreshold">247만 원</div>
+      </div>
+    </div>
+
+    <div class="info-note" id="pensionDeductNotice"></div>
+
+    <div class="info-note">
+      * 본 모의계산은 2026년 법령 고시 기준에 따른 단순 추정치이며 고급자동차(배기량/가액 기준), 회원권, 자녀 무료임차소득 등 상세 항목 심사에 따라 행정복지센터나 복지로 공식 심사 결과와 차이가 있을 수 있습니다.
+    </div>
+  </div>
+</div>
+
+<script>
+function calculateBasicPension() {
+  const isSingle = document.getElementById('householdType').value === 'single';
+  const threshold = isSingle ? 2470000 : 3952000;
+  const basicPropDeduction = parseFloat(document.getElementById('regionType').value);
+
+  const earned = parseFloat(document.getElementById('earnedIncome').value) || 0;
+  const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+
+  const propValue = parseFloat(document.getElementById('propertyValue').value) || 0;
+  const finValue = parseFloat(document.getElementById('financialValue').value) || 0;
+  const debt = parseFloat(document.getElementById('debtValue').value) || 0;
+
+  // 1. 소득평가액 산정 (근로소득: 116만 원 공제 후 70% 반영)
+  const earnedEval = Math.max(0, (earned - 1160000) * 0.7);
+  const totalIncomeEval = earnedEval + otherIncome;
+
+  // 2. 일반재산 소득환산액 [(재산 - 지역기본공제) × 연 4% ÷ 12]
+  // ※ 부채가 일반재산 공제 후 잔액에 적용될 수 있으나 간이모델은 순자산 반영
+  const netProp = Math.max(0, propValue - basicPropDeduction);
+
+  // 3. 금융재산 소득환산액 [(금융 - 2,000만 원 공제 - 부채) × 연 4% ÷ 12]
+  const netFin = Math.max(0, finValue - 20000000 - debt);
+
+  // 재산의 월 소득환산액 합계
+  const propMonthlyEval = (netProp + netFin) * 0.04 / 12;
+
+  // 4. 최종 소득인정액
+  const totalRecognized = Math.round(totalIncomeEval + propMonthlyEval);
+
+  // 렌더링
+  document.getElementById('resIncomeEval').innerText = Math.round(totalIncomeEval).toLocaleString() + '원';
+  document.getElementById('resPropEval').innerText = Math.round(propMonthlyEval).toLocaleString() + '원';
+  document.getElementById('resTotalRecognized').innerText = totalRecognized.toLocaleString() + '원';
+  document.getElementById('resThreshold').innerText = (threshold / 10000).toLocaleString() + '만 원';
+
+  const card = document.getElementById('judgeCard');
+  const status = document.getElementById('judgeStatus');
+  const sub = document.getElementById('judgeSub');
+
+  if (totalRecognized <= threshold) {
+    card.className = 'judge-card judge-pass';
+    status.innerText = '✅ 수급 가능 대상';
+    sub.innerText = `소득인정액(${totalRecognized.toLocaleString()}원)이 기준선(${(threshold/10000)}만 원) 이하입니다.`;
+  } else {
+    card.className = 'judge-card judge-fail';
+    status.innerText = '❌ 선정기준액 초과';
+    sub.innerText = `소득인정액(${totalRecognized.toLocaleString()}원)이 기준선(${(threshold/10000)}만 원)을 초과했습니다.`;
+  }
+
+  // 국민연금 연계 감액 주의 안내
+  const notice = document.getElementById('pensionDeductNotice');
+  if (otherIncome >= 524550) {
+    notice.innerHTML = '⚠️ <strong>국민연금 연계 감액 주의:</strong> 국민연금 등 수령액이 524,550원(기준연금액의 150%)을 초과하므로 실제 수급 시 기초연금액(최대 34만 9,700원)의 일부가 감액될 수 있습니다.';
+    notice.style.color = '#c2410c';
+  } else {
+    notice.innerHTML = '';
+  }
+
+  document.getElementById('resultBox').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
